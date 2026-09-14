@@ -16,11 +16,16 @@ jobs:
           mkdir -p /tmp/nspd
           for n in '22:33-6.503' '22:33-6.552' '22:33-6.491' '22:33-6.526' '22:00-6.978' '22:00-6.1088'; do
             safe=$(echo "$n" | tr ':.' '__')
-            url="https://nspd.gov.ru/api/geoportal/v2/search/geoportal?thematicSearchId=5&query=${n}&CRS=EPSG:4326"
             curl --fail --silent --show-error --location --insecure \
+              --connect-timeout 10 --max-time 30 --retry 1 \
+              -A 'Mozilla/5.0' \
               -H 'Referer: https://nspd.gov.ru/map?thematic=PKK' \
               -H 'Accept: application/json, text/plain, */*' \
-              "$url" -o "/tmp/nspd/${safe}.json"
+              --get 'https://nspd.gov.ru/api/geoportal/v2/search/geoportal' \
+              --data-urlencode 'thematicSearchId=5' \
+              --data-urlencode "query=${n}" \
+              --data-urlencode 'CRS=EPSG:4326' \
+              -o "/tmp/nspd/${safe}.json"
             test -s "/tmp/nspd/${safe}.json"
             python -c "import json; d=json.load(open('/tmp/nspd/${safe}.json', encoding='utf-8')); f=d.get('data',{}).get('features',[]); print('${n}: features=',len(f),'geometry=',(f[0].get('geometry',{}).get('type') if f else None))"
           done
