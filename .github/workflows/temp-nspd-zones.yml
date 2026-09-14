@@ -22,16 +22,7 @@ jobs:
               -H 'Accept: application/json, text/plain, */*' \
               "$url" -o "/tmp/nspd/${safe}.json"
             test -s "/tmp/nspd/${safe}.json"
-            python - <<PY
-import json
-p='/tmp/nspd/${safe}.json'
-d=json.load(open(p,encoding='utf-8'))
-f=d.get('data',{}).get('features',[])
-print('${n}: features=',len(f))
-if f:
- print('geometry=',f[0].get('geometry',{}).get('type'))
- print('properties=',f[0].get('properties',{}))
-PY
+            python -c "import json; d=json.load(open('/tmp/nspd/${safe}.json', encoding='utf-8')); f=d.get('data',{}).get('features',[]); print('${n}: features=',len(f),'geometry=',(f[0].get('geometry',{}).get('type') if f else None))"
           done
       - name: Upload NSPD data
         uses: actions/upload-artifact@v4
